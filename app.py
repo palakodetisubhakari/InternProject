@@ -5,14 +5,14 @@ import io
 
 st.set_page_config(page_title="AI PFMEA Generator", layout="wide")
 st.title("🤖 AI PFMEA Generator")
-st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4.")
+#st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4.")
 
 # Inputs
 openai_api_key = st.text_input("🔑 OpenAI API Key", type="password")
 process_name = st.text_input("🏭 Process Name")
 equipment = st.text_input("🛠️ Equipment Involved")
 special_notes = st.text_area("📌 Special Considerations")
-markdown_examples = st.text_area("📎 Paste Previous PFMEA Markdown Table (optional)")
+#markdown_examples = st.text_area("📎 Paste Previous PFMEA Markdown Table (optional)")
 
 if st.button("🚀 Generate PFMEA"):
     if not all([openai_api_key, process_name, equipment]):
@@ -38,7 +38,7 @@ Special Considerations: {special_notes}
 Structure the PFMEA as a markdown table with the following columns:
 {pfmea_columns}
 
-Generate at least 9 rows.
+Generate at least 10 rows.
 
 {f'Examples:\n{markdown_examples}' if markdown_examples else ''}
 """
