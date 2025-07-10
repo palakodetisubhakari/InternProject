@@ -3,13 +3,13 @@ import pandas as pd
 import openai
 import io
 
-# ✅ Securely load OpenAI API key from Streamlit secrets
+# ✅ Load OpenAI API key securely from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 # 🧾 App layout and header
 st.set_page_config(page_title="AI PFMEA Generator", layout="wide")
 st.title("🤖 AI PFMEA Generator")
-st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4 and your example data from `PFMEA.xlsx`.")
+st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4 and examples from `PFMEA.xlsx`.")
 
 # ✅ User inputs
 process_name = st.text_input("🏭 Process Name")
@@ -20,9 +20,14 @@ special_notes = st.text_area("📌 Special Considerations")
 try:
     df_examples = pd.read_excel("PFMEA.xlsx")
     markdown_table_examples = df_examples.to_markdown(index=False)
+    examples_section = f"""
+# Use the following examples from a previous PFMEA as a reference:
+{markdown_table_examples}
+"""
 except Exception as e:
     df_examples = None
     markdown_table_examples = ""
+    examples_section = ""
     st.warning(f"⚠️ Could not load PFMEA example file: {e}")
 
 # ✅ On button click: Generate PFMEA
@@ -40,12 +45,7 @@ if st.button("🚀 Generate PFMEA"):
         "Current process control detection | Detection | RPN | Recommended activities"
     )
 
-    # 🔁 GPT prompt with examples
-    examples_section = f"""
-# Use the following examples from a previous PFMEA as a reference:
-{markdown_table_examples}
-""" if markdown_table_examples else ""
-
+    # 🔁 Build full GPT prompt
     prompt = f"""
 You are an expert in automotive manufacturing PFMEA.
 Generate a detailed PFMEA table for the following process:
@@ -57,7 +57,8 @@ Special Considerations: {special_notes}
 Structure the PFMEA as a markdown table with the following columns:
 {pfmea_columns}
 
-Generate a comprehensive table with at least 9 rows.
+Generate at least 10 rows.
+
 {examples_section}
 """
 
@@ -70,6 +71,7 @@ Generate a comprehensive table with at least 9 rows.
             temperature=0.7,
         )
 
+        # 📄 Parse GPT output into DataFrame
         content = response.choices[0].message.content
         lines = content.strip().split("\n")
         table_lines = [line for line in lines if "|" in line]
@@ -87,7 +89,7 @@ Generate a comprehensive table with at least 9 rows.
                 data[i].extend([''] * (len(expected_columns) - len(data[i])))
             data[i] = data[i][:len(expected_columns)]
 
-        # 📊 Create and display DataFrame
+        # 📊 Display table
         df = pd.DataFrame(data, columns=expected_columns)
         st.success("✅ PFMEA Table Generated Successfully!")
         st.dataframe(df, use_container_width=True)
