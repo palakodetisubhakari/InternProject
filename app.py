@@ -2,13 +2,16 @@ import streamlit as st
 import pandas as pd
 import openai
 import io
+import os
+
+# Use stored secret
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 st.set_page_config(page_title="AI PFMEA Generator", layout="wide")
 st.title("🤖 AI PFMEA Generator")
-#st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4.")
+st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4.")
 
-# Inputs
-openai_api_key = st.text_input("🔑 OpenAI API Key", type="password")
+# Input fields (no API input anymore)
 process_name = st.text_input("🏭 Process Name")
 equipment = st.text_input("🛠️ Equipment Involved")
 special_notes = st.text_area("📌 Special Considerations")
