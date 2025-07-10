@@ -2,26 +2,36 @@ import streamlit as st
 import pandas as pd
 import openai
 import io
-import os
 
-# Use stored secret
+# ✅ Securely load OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
+# 🧾 App layout and header
 st.set_page_config(page_title="AI PFMEA Generator", layout="wide")
 st.title("🤖 AI PFMEA Generator")
-st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4.")
+st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4 and your example data from `PFMEA.xlsx`.")
 
-# Input fields (no API input anymore)
+# ✅ User inputs
 process_name = st.text_input("🏭 Process Name")
 equipment = st.text_input("🛠️ Equipment Involved")
 special_notes = st.text_area("📌 Special Considerations")
-#markdown_examples = st.text_area("📎 Paste Previous PFMEA Markdown Table (optional)")
 
+# ✅ Try loading example data from PFMEA.xlsx
+try:
+    df_examples = pd.read_excel("PFMEA.xlsx")
+    markdown_table_examples = df_examples.to_markdown(index=False)
+except Exception as e:
+    df_examples = None
+    markdown_table_examples = ""
+    st.warning(f"⚠️ Could not load PFMEA example file: {e}")
+
+# ✅ On button click: Generate PFMEA
 if st.button("🚀 Generate PFMEA"):
     if not all([openai_api_key, process_name, equipment]):
         st.warning("Please fill in the required fields.")
         st.stop()
 
+    # PFMEA column headers
     pfmea_columns = (
         "station number | process name | process elements | Requirements | "
         "Potential Failure Modes | Potential effect of line | Potential effect of system | "
@@ -29,6 +39,12 @@ if st.button("🚀 Generate PFMEA"):
         "Current process management Prevention | Frequency of Occurrence | "
         "Current process control detection | Detection | RPN | Recommended activities"
     )
+
+    # 🔁 GPT prompt with examples
+    examples_section = f"""
+# Use the following examples from a previous PFMEA as a reference:
+{markdown_table_examples}
+""" if markdown_table_examples else ""
 
     prompt = f"""
 You are an expert in automotive manufacturing PFMEA.
@@ -41,12 +57,12 @@ Special Considerations: {special_notes}
 Structure the PFMEA as a markdown table with the following columns:
 {pfmea_columns}
 
-Generate at least 10 rows.
-
-{f'Examples:\n{markdown_examples}' if markdown_examples else ''}
+Generate a comprehensive table with at least 9 rows.
+{examples_section}
 """
 
     try:
+        # 🔍 Call OpenAI GPT-4
         client = openai.OpenAI(api_key=openai_api_key)
         response = client.chat.completions.create(
             model="gpt-4",
@@ -57,8 +73,10 @@ Generate at least 10 rows.
         content = response.choices[0].message.content
         lines = content.strip().split("\n")
         table_lines = [line for line in lines if "|" in line]
+
         header_line = table_lines[0]
         headers = [h.strip() for h in header_line.split("|")[1:-1]]
+
         sep_index = next(i for i, l in enumerate(table_lines) if "---" in l)
         data_lines = table_lines[sep_index + 1:]
         data = [line.strip().split("|")[1:-1] for line in data_lines]
@@ -69,10 +87,12 @@ Generate at least 10 rows.
                 data[i].extend([''] * (len(expected_columns) - len(data[i])))
             data[i] = data[i][:len(expected_columns)]
 
+        # 📊 Create and display DataFrame
         df = pd.DataFrame(data, columns=expected_columns)
-        st.success("✅ PFMEA Generated Successfully!")
+        st.success("✅ PFMEA Table Generated Successfully!")
         st.dataframe(df, use_container_width=True)
 
+        # 💾 Export as Excel
         output = io.BytesIO()
         df.to_excel(output, index=False, sheet_name="PFMEA")
         st.download_button(
