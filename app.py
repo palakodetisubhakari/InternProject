@@ -11,7 +11,7 @@ client = OpenAI(api_key=openai_api_key)
 # Page config
 st.set_page_config(page_title="AI PFMEA Generator", layout="wide")
 st.title("🤖 AI PFMEA Generator")
-st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4 and examples from `PFMEA.xlsx`.")
+#st.markdown("Generate a detailed PFMEA table using OpenAI GPT-4 and examples from `PFMEA.xlsx`.")
 
 # Input fields
 process_name = st.text_input("🏭 Process Name")
