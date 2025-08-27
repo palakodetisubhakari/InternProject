@@ -5,7 +5,7 @@ from openai import OpenAI
 import os
 
 # Use stored secret
-#openai_api_key = st.secrets["OPENAI_API_KEY"]
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=openai_api_key)
 
 # Page config
